@@ -83,6 +83,70 @@
   }
 
   // ============================================
+  // Color Utilities
+  // ============================================
+  /**
+   * Convert hex color to RGB values
+   * @param {string} hex - Hex color (e.g., '#fafafa')
+   * @returns {object} RGB values {r, g, b}
+   */
+  function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  }
+
+  /**
+   * Calculate relative luminance using WCAG formula
+   * @param {object} rgb - RGB values {r, g, b}
+   * @returns {number} Relative luminance (0-1)
+   */
+  function getLuminance(rgb) {
+    const [r, g, b] = [rgb.r, rgb.g, rgb.b].map(val => {
+      const normalized = val / 255;
+      return normalized <= 0.03928
+        ? normalized / 12.92
+        : Math.pow((normalized + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  /**
+   * Determine if a color is light (luminance > 0.5)
+   * @param {string} hexColor - Hex color
+   * @returns {boolean} True if light, false if dark
+   */
+  function isLightColor(hexColor) {
+    const rgb = hexToRgb(hexColor);
+    if (!rgb) return true; // Default to light if can't parse
+    return getLuminance(rgb) > 0.5;
+  }
+
+  /**
+   * Update prompt text color based on background
+   * @param {boolean} isLight - Whether the background is light
+   * @param {boolean} isImage - Whether the background is an image
+   */
+  function updatePromptContrast(isLight, isImage) {
+    if (isImage) {
+      // For images, use white text with strong shadow for readability
+      elements.prompt.style.color = '#ffffff';
+      elements.prompt.style.textShadow = '0 2px 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6)';
+    } else if (isLight) {
+      // Light background: use dark text
+      elements.prompt.style.color = '#2c2c2c';
+      elements.prompt.style.textShadow = '0 1px 2px rgba(255, 255, 255, 0.5)';
+    } else {
+      // Dark background: use light text
+      elements.prompt.style.color = '#e8e8e8';
+      elements.prompt.style.textShadow = '0 1px 2px rgba(0, 0, 0, 0.5)';
+    }
+  }
+
+  // ============================================
   // Apply Settings to UI
   // ============================================
   function applyPrompt() {
@@ -105,16 +169,23 @@
     if (bgType === 'image' && bgImage) {
       document.body.style.backgroundColor = '';
       document.body.style.backgroundImage = `url(${bgImage})`;
-      
+
       // Show preview
       elements.imagePreview.src = bgImage;
       elements.imagePreviewContainer.hidden = false;
+
+      // Update prompt contrast for image background
+      updatePromptContrast(false, true);
     } else {
       document.body.style.backgroundImage = '';
       document.body.style.backgroundColor = bgColor;
-      
+
       // Hide preview
       elements.imagePreviewContainer.hidden = true;
+
+      // Update prompt contrast based on background color
+      const isLight = isLightColor(bgColor);
+      updatePromptContrast(isLight, false);
     }
   }
 
