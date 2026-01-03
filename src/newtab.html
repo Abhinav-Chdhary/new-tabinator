@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Prevent FOUC and ensure instant render -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <title>New Tab</title>
+  <link rel="stylesheet" href="newtab.css">
+</head>
+<body>
+  <main class="container">
+    <!-- Reflective prompt - intentionally thoughtful, not motivational -->
+    <p class="prompt">What is the most important thing that needs to get done today?</p>
+    
+    <!-- Search form - routes to user's default search engine -->
+    <form id="search-form" class="search-form" role="search">
+      <input
+        type="text"
+        id="search-input"
+        class="search-input"
+        placeholder="Search..."
+        autocomplete="off"
+        autofocus
+        aria-label="Search the web"
+      >
+    </form>
+  </main>
+
+  <script src="newtab.js"></script>
+</body>
+</html>

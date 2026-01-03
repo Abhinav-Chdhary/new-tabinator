@@ -1,0 +1,181 @@
+/**
+ * New Tabinator - Minimal, Calm Styles
+ * 
+ * Design principles:
+ * - Generous white space for calm feeling
+ * - System fonts for instant load (no network requests)
+ * - Subtle shadows and transitions for depth
+ * - Keyboard-first, accessible design
+ */
+
+/* ============================================
+   CSS Custom Properties
+   ============================================ */
+:root {
+  /* Colors - soft, muted palette */
+  --color-bg: #fafafa;
+  --color-text: #2c2c2c;
+  --color-text-muted: #6b6b6b;
+  --color-input-bg: #ffffff;
+  --color-input-border: #e8e8e8;
+  --color-input-border-focus: #c4c4c4;
+  --color-shadow: rgba(0, 0, 0, 0.04);
+  --color-shadow-hover: rgba(0, 0, 0, 0.08);
+  
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-serif: 'Georgia', 'Times New Roman', serif;
+  
+  /* Spacing */
+  --space-unit: 8px;
+  
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-smooth: 250ms ease;
+}
+
+/* ============================================
+   Base Reset & Body
+   ============================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  
+  /* Smooth font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   Layout Container
+   ============================================ */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  
+  min-height: 100vh;
+  padding: calc(var(--space-unit) * 4);
+  
+  /* Slight upward offset for visual balance */
+  padding-bottom: calc(var(--space-unit) * 12);
+}
+
+/* ============================================
+   Reflective Prompt
+   ============================================ */
+.prompt {
+  font-family: var(--font-serif);
+  font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+  font-weight: 400;
+  font-style: italic;
+  color: var(--color-text-muted);
+  text-align: center;
+  
+  max-width: 480px;
+  margin-bottom: calc(var(--space-unit) * 5);
+  
+  /* Subtle letter spacing for elegance */
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+}
+
+/* ============================================
+   Search Form & Input
+   ============================================ */
+.search-form {
+  width: 100%;
+  max-width: 520px;
+}
+
+.search-input {
+  width: 100%;
+  padding: calc(var(--space-unit) * 2) calc(var(--space-unit) * 3);
+  
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: var(--color-text);
+  
+  background-color: var(--color-input-bg);
+  border: 1px solid var(--color-input-border);
+  border-radius: 12px;
+  
+  /* Soft shadow for depth */
+  box-shadow: 
+    0 2px 8px var(--color-shadow),
+    0 1px 2px var(--color-shadow);
+  
+  /* Smooth transitions */
+  transition: 
+    border-color var(--transition-fast),
+    box-shadow var(--transition-smooth),
+    transform var(--transition-smooth);
+  
+  /* Remove default styling */
+  outline: none;
+  appearance: none;
+}
+
+/* Placeholder styling */
+.search-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+/* Hover state - subtle lift */
+.search-input:hover {
+  border-color: var(--color-input-border-focus);
+  box-shadow: 
+    0 4px 16px var(--color-shadow-hover),
+    0 2px 4px var(--color-shadow);
+}
+
+/* Focus state - prominent but calm */
+.search-input:focus {
+  border-color: var(--color-input-border-focus);
+  box-shadow: 
+    0 4px 20px var(--color-shadow-hover),
+    0 2px 6px var(--color-shadow);
+  transform: translateY(-1px);
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (max-width: 480px) {
+  .container {
+    padding: calc(var(--space-unit) * 3);
+    padding-bottom: calc(var(--space-unit) * 8);
+  }
+  
+  .prompt {
+    margin-bottom: calc(var(--space-unit) * 4);
+  }
+  
+  .search-input {
+    padding: calc(var(--space-unit) * 1.75) calc(var(--space-unit) * 2.5);
+    border-radius: 10px;
+  }
+}
+
+/* ============================================
+   Reduced Motion Support
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

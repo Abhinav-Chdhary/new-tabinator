@@ -1,0 +1,15 @@
+{
+  "name": "new-tabinator",
+  "version": "1.0.0",
+  "description": "A minimal, calm New Tab page with a reflective prompt and search",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run build && echo 'Built! Load dist/ in chrome://extensions'",
+    "build": "bun run build.js",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["chrome-extension", "new-tab", "minimal", "productivity"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {}
+}
