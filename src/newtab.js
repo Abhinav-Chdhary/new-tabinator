@@ -18,8 +18,12 @@
     PROMPT: 'newtabinator_prompt',
     BG_TYPE: 'newtabinator_bg_type',
     BG_COLOR: 'newtabinator_bg_color',
-    BG_IMAGE: 'newtabinator_bg_image'
+    BG_IMAGE: 'newtabinator_bg_image',
+    RECENT_DOMAINS: 'newtabinator_recent_domains'
   };
+
+  // LRU Configuration
+  const MAX_RECENT_DOMAINS = 5;
 
   const DEFAULTS = {
     PROMPT: 'What is the most important thing that needs to get done today?',
@@ -35,6 +39,7 @@
     searchForm: document.getElementById('search-form'),
     searchInput: document.getElementById('search-input'),
     prompt: document.getElementById('prompt'),
+    recentDomains: document.getElementById('recent-domains'),
     
     // Settings
     settingsBtn: document.getElementById('settings-btn'),
@@ -302,6 +307,231 @@
     Object.values(STORAGE_KEYS).forEach(removeStoredValue);
     elements.imageUpload.value = '';
     applyAllSettings();
+    renderRecentDomains(); // Re-render (will be empty after reset)
+  }
+
+  // ============================================
+  // LRU Domain Tracking
+  // ============================================
+
+  /**
+   * LRU Cache implementation for recent domains
+   * Stores: [{domain: string, url: string, timestamp: number}]
+   */
+  function getRecentDomains() {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEYS.RECENT_DOMAINS);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveRecentDomains(domains) {
+    try {
+      localStorage.setItem(STORAGE_KEYS.RECENT_DOMAINS, JSON.stringify(domains));
+    } catch (e) {
+      console.warn('Failed to save recent domains:', e);
+    }
+  }
+
+  /**
+   * Extract domain from URL
+   */
+  function extractDomain(url) {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.replace(/^www\./, '');
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Get display name for a domain (shortened version)
+   */
+  function getDomainDisplayName(domain) {
+    // Remove common TLDs for cleaner display
+    const parts = domain.split('.');
+    if (parts.length > 1) {
+      // Return main domain name (e.g., "github" from "github.com")
+      return parts[parts.length - 2];
+    }
+    return domain;
+  }
+
+  /**
+   * Update LRU cache with a new domain visit
+   */
+  function addToRecentDomains(url) {
+    const domain = extractDomain(url);
+    if (!domain) return;
+
+    // Skip internal Chrome URLs
+    if (domain.includes('chrome') || domain.includes('newtab') || domain === 'localhost') {
+      return;
+    }
+
+    const domains = getRecentDomains();
+    
+    // Remove existing entry for this domain (LRU: move to front)
+    const filtered = domains.filter(d => d.domain !== domain);
+    
+    // Add to front with current timestamp
+    filtered.unshift({
+      domain,
+      url: `https://${domain}`,
+      timestamp: Date.now()
+    });
+
+    // Keep only top MAX_RECENT_DOMAINS
+    const trimmed = filtered.slice(0, MAX_RECENT_DOMAINS);
+    
+    saveRecentDomains(trimmed);
+    renderRecentDomains();
+  }
+
+  /**
+   * Fetch favicon URL for a domain
+   */
+  function getFaviconUrl(domain) {
+    // Use Google's public favicon service
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+  }
+
+  /**
+   * Create a domain link element
+   */
+  function createDomainElement(domainData) {
+    const { domain, url } = domainData;
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.className = 'domain-link';
+    link.title = domain;
+    link.setAttribute('aria-label', `Visit ${domain}`);
+
+    const icon = document.createElement('img');
+    icon.src = getFaviconUrl(domain);
+    icon.alt = '';
+    icon.className = 'domain-icon';
+    icon.loading = 'lazy';
+    
+    // Fallback for missing favicons
+    icon.onerror = () => {
+      icon.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%236b6b6b"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" font-size="12" fill="white">' + domain.charAt(0).toUpperCase() + '</text></svg>';
+    };
+
+    const label = document.createElement('span');
+    label.className = 'domain-label';
+    label.textContent = getDomainDisplayName(domain);
+
+    link.appendChild(icon);
+    link.appendChild(label);
+
+    // Track click to update LRU
+    link.addEventListener('click', () => {
+      addToRecentDomains(url);
+    });
+
+    return link;
+  }
+
+  /**
+   * Render the recent domains section
+   */
+  function renderRecentDomains() {
+    const container = elements.recentDomains;
+    if (!container) return;
+
+    const domains = getRecentDomains();
+    
+    // Clear existing content
+    container.innerHTML = '';
+
+    // Render each domain
+    domains.forEach(domainData => {
+      container.appendChild(createDomainElement(domainData));
+    });
+  }
+
+  /**
+   * Initialize recent domains from browser history
+   * Uses Chrome's history API to populate initial data
+   */
+  async function initRecentDomainsFromHistory() {
+    // Only run if Chrome history API is available
+    if (!chrome?.history?.search) {
+      renderRecentDomains();
+      return;
+    }
+
+    // Fetch recent history if we don't have enough cached domains
+    const cached = getRecentDomains();
+    if (cached.length >= MAX_RECENT_DOMAINS) {
+      renderRecentDomains();
+      return;
+    }
+
+    try {
+      // Get recent history items
+      const historyItems = await chrome.history.search({
+        text: '',
+        startTime: Date.now() - (7 * 24 * 60 * 60 * 1000), // Last 7 days
+        maxResults: 100
+      });
+
+      if (!historyItems || historyItems.length === 0) {
+        renderRecentDomains();
+        return;
+      }
+
+      // Group by domain and get most recent visit per domain
+      const domainMap = new Map();
+      
+      for (const item of historyItems) {
+        const domain = extractDomain(item.url);
+        if (!domain) continue;
+        
+        // Skip internal URLs
+        if (domain.includes('chrome') || domain.includes('newtab') || domain === 'localhost') {
+          continue;
+        }
+
+        // Keep the most recent visit per domain
+        const existing = domainMap.get(domain);
+        const visitTime = item.lastVisitTime || 0;
+        
+        if (!existing || visitTime > existing.timestamp) {
+          domainMap.set(domain, {
+            domain,
+            url: `https://${domain}`,
+            timestamp: visitTime
+          });
+        }
+      }
+
+      // Convert to array, sort by recent timestamp (LRU order)
+      const fromHistory = Array.from(domainMap.values())
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, MAX_RECENT_DOMAINS);
+
+      // Merge with cached (cached takes priority as they're more recent)
+      const cachedDomains = new Set(cached.map(d => d.domain));
+      const merged = [...cached];
+      
+      for (const histItem of fromHistory) {
+        if (!cachedDomains.has(histItem.domain) && merged.length < MAX_RECENT_DOMAINS) {
+          merged.push(histItem);
+        }
+      }
+
+      saveRecentDomains(merged);
+      renderRecentDomains();
+    } catch (e) {
+      console.warn('Failed to fetch history:', e);
+      renderRecentDomains();
+    }
   }
 
   // ============================================
@@ -351,4 +581,5 @@
   // ============================================
   applyAllSettings();
   initEventListeners();
+  initRecentDomainsFromHistory();
 })();
