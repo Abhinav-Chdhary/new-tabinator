@@ -1,32 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <!-- Prevent FOUC and ensure instant render -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content dark">
   <title>New Tab</title>
   <link rel="stylesheet" href="newtab.css">
 </head>
+
 <body>
   <main class="container">
-    <!-- Reflective prompt - intentionally thoughtful, not motivational -->
-    <p class="prompt">What is the most important thing that needs to get done today?</p>
-    
+    <!-- Reflective prompt - customizable by user -->
+    <p class="prompt" id="prompt">What is the most important thing that needs to get done today?</p>
+
     <!-- Search form - routes to user's default search engine -->
     <form id="search-form" class="search-form" role="search">
-      <input
-        type="text"
-        id="search-input"
-        class="search-input"
-        placeholder="Search..."
-        autocomplete="off"
-        autofocus
-        aria-label="Search the web"
-      >
+      <input type="text" id="search-input" class="search-input" placeholder="Search..." autocomplete="off" autofocus
+        aria-label="Search the web">
     </form>
   </main>
 
+  <!-- Settings button (bottom-right corner) -->
+  <button id="settings-btn" class="settings-btn" aria-label="Open settings">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"></circle>
+      <path
+        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+      </path>
+    </svg>
+  </button>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" id="modal-backdrop"></div>
+    <div class="modal-content" role="dialog" aria-labelledby="settings-title">
+      <header class="modal-header">
+        <h2 id="settings-title">Settings</h2>
+        <button id="close-modal" class="close-btn" aria-label="Close settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </header>
+
+      <div class="modal-body">
+        <!-- Prompt Customization -->
+        <section class="settings-section">
+          <label for="prompt-input" class="settings-label">Prompt</label>
+          <input type="text" id="prompt-input" class="settings-input" placeholder="Enter your custom prompt...">
+        </section>
+
+        <!-- Background Customization -->
+        <section class="settings-section">
+          <span class="settings-label">Background</span>
+
+          <div class="bg-options">
+            <!-- Solid Color Option -->
+            <div class="bg-option">
+              <input type="radio" id="bg-color" name="bg-type" value="color" checked>
+              <label for="bg-color">Solid Color</label>
+              <input type="color" id="color-picker" class="color-picker" value="#fafafa">
+            </div>
+
+            <!-- Image Upload Option -->
+            <div class="bg-option">
+              <input type="radio" id="bg-image" name="bg-type" value="image">
+              <label for="bg-image">Image</label>
+              <input type="file" id="image-upload" class="image-upload" accept="image/*">
+              <label for="image-upload" class="upload-btn">Choose File</label>
+            </div>
+          </div>
+
+          <!-- Image preview / clear -->
+          <div id="image-preview-container" class="image-preview-container" hidden>
+            <img id="image-preview" class="image-preview" alt="Background preview">
+            <button id="clear-image" class="clear-image-btn">Remove Image</button>
+          </div>
+        </section>
+
+        <!-- Reset -->
+        <section class="settings-section">
+          <button id="reset-settings" class="reset-btn">Reset to Defaults</button>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <script src="newtab.js"></script>
 </body>
+
 </html>
